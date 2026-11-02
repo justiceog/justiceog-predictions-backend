@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ʝµรƭเcεσɠ predictions – probability-based match predictions</title>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f3f5f7;--surface:#fff;--ink:#14202b;--mute:#5d6b78;--line:#d9dfe5;--pos:#0b7a4b;--neg:#b3382c;--accent:#14202b;--accent-ink:#fff;--warn:#fff4d6;--warn-ink:#5a4300;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f161d;--surface:#17212b;--ink:#e8eef3;--mute:#93a3b1;--line:#2a3846;--pos:#4fd197;--neg:#ff8a7a;--accent:#e8eef3;--accent-ink:#0f161d;--warn:#3a2f10;--warn-ink:#f3d98a}}
+:root[data-theme="dark"]{--bg:#0f161d;--surface:#17212b;--ink:#e8eef3;--mute:#93a3b1;--line:#2a3846;--pos:#4fd197;--neg:#ff8a7a;--accent:#e8eef3;--accent-ink:#0f161d;--warn:#3a2f10;--warn-ink:#f3d98a}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Schibsted Grotesk",system-ui,sans-serif}
+main{max-width:760px;margin:0 auto;padding:16px}
+h1{font-size:1.7rem;line-height:1.15;margin:8px 0 4px;letter-spacing:-.02em}
+.sub{color:var(--mute);margin:0 0 14px}
+.demo{background:var(--warn);color:var(--warn-ink);border-radius:8px;padding:10px 12px;font-size:.88rem;margin-bottom:14px}
+.ctrl{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.ctrl label{font-size:.9rem;color:var(--mute);display:flex;gap:6px;align-items:center}
+input[type=number]{width:96px;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit}
+button,.chip{font:inherit;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:7px 14px;cursor:pointer}
+.chip[aria-pressed=true]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+:focus-visible{outline:2px solid var(--pos);outline-offset:2px}
+.match{background:var(--surface);border:1px solid var(--line);border-radius:12px;margin-bottom:14px;overflow:hidden}
+.mh{padding:12px 14px;border-bottom:1px solid var(--line)}
+.mh b{font-size:1.05rem}.mh small{display:block;color:var(--mute)}
+.row{display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:11px 14px;border-bottom:1px solid var(--line);cursor:pointer;width:100%;text-align:left;background:none;border-radius:0;border-left:0;border-right:0;border-top:0}
+.row:last-of-type{border-bottom:0}
+.sel{font-weight:700}
+.ev{font-family:"JetBrains Mono",monospace;font-weight:500;color:var(--pos);text-align:right}
+.meta{color:var(--mute);font-size:.85rem}
+.meta2{color:var(--mute);font-size:.85rem;text-align:right}
+.risk-Low{color:var(--pos)}.risk-Medium{color:var(--warn-ink)}.risk-High{color:var(--neg)}
+.detail{padding:12px 14px;background:var(--bg);font-size:.92rem;border-bottom:1px solid var(--line)}
+.detail p{margin:0 0 8px}
+.scores{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 10px}
+.scores span{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:5px 10px}
+pre{margin:0;overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px;font:12px/1.45 "JetBrains Mono",monospace;max-width:100%}
+.none{padding:12px 14px;color:var(--mute)}
+.rej{padding:8px 14px;color:var(--mute);font-size:.85rem}
+.live{margin-bottom:18px}.lg{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px 14px}.lg label{display:flex;flex-direction:column;gap:4px;font-size:.85rem;color:var(--mute)}.lg select,.lg input[type=number]{width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit}.lg .full{grid-column:1/-1}.lg input[type=range]{width:100%}.lrow{display:grid;grid-template-columns:1fr 88px;gap:2px 12px;padding:10px 14px;border-top:1px solid var(--line);align-items:center}.lrow input{width:100%;padding:7px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit}.lrow .ev.no{color:var(--mute)}.lnote{padding:10px 14px 12px;color:var(--mute);font-size:.82rem;border-top:1px solid var(--line)}[hidden]{display:none!important}.tbl{width:100%;border-collapse:collapse;font-size:.88rem;margin:6px 0 12px}.tbl th,.tbl td{padding:6px 4px;border-top:1px solid var(--line);text-align:right}.tbl th:first-child,.tbl td:first-child{text-align:left}.tbl th{color:var(--mute);font-weight:500}.kp{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}.kp div{background:var(--bg);border-radius:8px;padding:10px}.kp b{display:block;font-size:1.25rem}.kp small{color:var(--mute)}.pos{color:var(--pos)}.neg{color:var(--neg)}.top{display:flex;align-items:center;justify-content:space-between;gap:10px}#drawer{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50}.dp{width:82%;max-width:320px;height:100%;background:var(--surface);overflow:auto;padding-top:env(safe-area-inset-top,0px)}.dh{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line)}.di{display:block;width:100%;text-align:left;padding:13px 16px;border:0;border-bottom:1px solid var(--line);border-radius:0;background:none;font:inherit;color:var(--ink);cursor:pointer}details.di{padding:0}details.di summary{padding:13px 16px;cursor:pointer}details .di{padding-left:32px;background:var(--bg)}.crumb{color:var(--mute);font-size:.85rem;margin:0 0 8px}.hero{background:linear-gradient(180deg,#0e1b3a,#12331f);color:#fff;border-radius:12px;padding:22px 14px;text-align:center;margin-bottom:8px}.ht{font-size:1.4rem;font-weight:700}.vs{opacity:.7;margin:4px 0}.hs{opacity:.85;font-size:.9rem;margin-top:4px}.by{color:var(--mute);font-size:.82rem;margin-bottom:10px}.tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:14px;padding-bottom:4px}.tab{white-space:nowrap;font:inherit;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:8px 12px;cursor:pointer}.tab[aria-pressed=true]{border-color:var(--pos);color:var(--pos);font-weight:700}.cmp{display:grid;grid-template-columns:52px 1fr 52px;gap:8px;align-items:center;margin:0 0 14px}.cmp small{grid-column:1/-1;text-align:center;color:var(--mute)}.cmp span{font-family:"JetBrains Mono",monospace;text-align:center}.cb{height:10px;background:var(--neg);border-radius:5px;overflow:hidden}.cb i{display:block;height:100%;background:var(--pos)}.rep{float:right;font-size:.85rem;color:var(--pos);text-decoration:none;font-weight:700}.back{display:inline-block;margin:0 0 12px;color:var(--mute);text-decoration:none}.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px}.card h2{font-size:1.05rem;margin:0 0 8px}.card p{margin:0 0 10px}.big{font-size:1.9rem;font-weight:700;letter-spacing:-.02em;margin:4px 0}.info{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:14px}.info div{background:var(--surface);padding:10px 12px}.info small{display:block;color:var(--mute)}.tips{padding:0;overflow:hidden}.tips h2{padding:14px 14px 8px;margin:0}.tg,.tr{display:grid;grid-template-columns:1fr 52px 92px;gap:8px;align-items:center;padding:9px 14px;border-top:1px solid var(--line)}.tg{background:var(--bg);color:var(--mute);font-size:.82rem}.tr small{display:block;color:var(--mute);font-size:.78rem}.tr small.mk{color:var(--pos)}.od{font-family:"JetBrains Mono",monospace;text-align:center}.bar{position:relative;height:22px;border-radius:4px;background:var(--line);overflow:hidden}.bar i{position:absolute;inset:0 auto 0 0;background:var(--pos);opacity:.7}.bar b{position:relative;display:block;text-align:center;font-size:.8rem;line-height:22px}footer{color:var(--mute);font-size:.85rem;padding:10px 0 30px}
+</style>
+</head>
+<body>
+<main>
+<div class="top"><h1>ʝµรƭเcεσɠ predictions</h1><button class="chip" id="menu" aria-haspopup="dialog">Menu</button></div>
+<div id="drawer" hidden><div class="dp" role="dialog" aria-label="Menu"><div class="dh"><b>ʝµรƭเcεσɠ predictions</b><button class="chip" id="dx">Close</button></div>
+<button class="di" data-a="today">Today’s predictions</button>
+<button class="di" data-a="results">Results tracker</button>
+<details class="di"><summary>All predictions</summary><div id="dl"></div></details>
+<details class="di"><summary>Betting tips</summary><button class="di" data-a="value">Value bets (3%+ edge)</button><button class="di" data-a="hi">Model probability 70%+</button><button class="di" data-a="rej">Show or hide rejected bets</button></details>
+</div></div>
+<p class="sub">Model probabilities against market odds. Only bets with at least a 3% edge are shown.</p>
+<div class="demo" id="src">Loading matches…</div>
+<div class="ctrl">
+<label>Bankroll <input id="bank" type="number" min="0" value="1000" inputmode="decimal"></label>
+</div>
+<div id="list"></div>
+<div id="detail" hidden></div>
+<div id="results" hidden></div>
+<footer>Every bet carries risk, and no model can promise a win. Stakes use quarter-Kelly and are capped at 2% of bankroll per bet. Only stake money you can afford to lose. If gambling stops being fun, contact a local support service.</footer>
+</main>
+<script>
+const DEMO_M=[
+{id:"m1",lg:"Premier League",h:"Northgate",a:"Riverside",hx:2.05,ax:0.85,q:.95,o:{H:1.62,D:4.2,A:5.6,O25:1.95,U25:1.9,BY:2.05,BN:1.75},sub:"Riverside miss their starting centre-back."},
+{id:"m2",lg:"La Liga",h:"Costa Verde",a:"Atletico Sur",hx:1.25,ax:1.1,q:.85,o:{H:2.7,D:3.1,A:2.9,O25:2.3,U25:1.65,BY:1.95,BN:1.85},sub:"Both sides defend deep, and the league averages few goals."},
+{id:"m3",lg:"Bundesliga",h:"Ostwald",a:"Lindenau",hx:1.95,ax:1.7,q:.9,o:{H:2.1,D:3.9,A:3.4,O25:1.62,U25:2.3,BY:1.6,BN:2.35},sub:"Both teams press high and concede chances."},
+{id:"m4",lg:"Serie A",h:"Porto Alto",a:"Monteverde",hx:1.5,ax:0.8,q:.55,o:{H:1.6,D:3.8,A:6.0,O25:2.2,U25:1.7,BY:2.1,BN:1.7},sub:"Lineup data is incomplete."}
+];
+const MIN_EDGE=.03,CAP=.02,N=10000;
+function rng(s){return()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function pois(l,r){const L=Math.exp(-l);let k=0,p=1;do{k++;p*=r()}while(p>L);return k-1}
+function sim(m,seed){const r=rng(seed),c={H:0,D:0,A:0,O:0,B:0},sc={};
+for(let i=0;i<N;i++){const h=pois(m.hx,r),a=pois(m.ax,r);
+if(h>a)c.H++;else if(h==a)c.D++;else c.A++;
+if(h+a>2.5)c.O++;if(h>0&&a>0)c.B++;
+const k=h+"-"+a;sc[k]=(sc[k]||0)+1}
+const top=Object.entries(sc).sort((x,y)=>y[1]-x[1]).slice(0,3).map(([k,v])=>({score:k,prob:v/N}));
+return{p:{H:c.H/N,D:c.D/N,A:c.A/N,O25:c.O/N,U25:1-c.O/N,BY:c.B/N,BN:1-c.B/N},top}}
+const LABEL=(m)=>({H:m.h+" to win",D:"Draw",A:m.a+" to win",O25:"Over 2.5 goals",U25:"Under 2.5 goals",BY:"Both teams score",BN:"Not both teams score"});
+function build(m,i,bank){const s=sim(m,i*977+13),L=LABEL(m),out=[];
+for(const k of Object.keys(m.o)){const p=s.p[k],odds=m.o[k],ev=p*odds-1,fair=1/p;
+const kelly=Math.max(0,ev/(odds-1))/4,stake=Math.min(kelly,CAP);
+const stars=Math.max(1,Math.min(5,Math.round(1+m.q*3+(p>.55?1:0))));
+const risk=p>=.55?"Low":p>=.35?"Medium":"High";
+out.push({k,sel:L[k],p,odds,fair,ev,stake,stars,risk,ok:ev>=MIN_EDGE&&m.q>=.6})}
+return{m,s,bets:out}}
+function expl(m,b){const d=m.hx-m.ax;
+return `The model gives ${m.h} ${m.hx.toFixed(2)} expected goals against ${m.ax.toFixed(2)} for ${m.a}, which drives this price. ${m.sub} The bookmaker odds of ${b.odds.toFixed(2)} are longer than the fair odds of ${b.fair.toFixed(2)}.`}
+let hi=false,rej=false,open=null,LEAGUE="";
+const $=s=>document.querySelector(s);
+function pct(x,d=1){return(x*100).toFixed(d)+"%"}
+function render(){const bank=+$("#bank").value||0;let h=(LEAGUE||hi)?`<p class="meta">Showing ${[LEAGUE,hi?"model probability 70%+":""].filter(Boolean).join(", ")}. <a href="#" data-all>Clear filters</a></p>`:"";
+MATCHES.forEach((m,i)=>{if(LEAGUE&&m.lg!=LEAGUE)return;const r=build(m,i+1,bank);
+let shown=r.bets.filter(b=>b.ok&&(!hi||b.p>=.7)).sort((x,y)=>y.ev-x.ev);
+const rejected=r.bets.filter(b=>!b.ok);
+h+=`<section class="match"><div class="mh"><a class="rep" href="#${m.id}">Full report</a><b>${m.h} v ${m.a}</b><small>${m.lg} · data completeness ${Math.round(m.q*100)}%</small></div>`;
+if(m.q<.6)h+=`<div class="none">No recommendation: match inputs are incomplete.</div>`;
+else if(!shown.length)h+=`<div class="none">No bet clears the 3% edge filter${hi?" at 70%+":""}.</div>`;
+shown.forEach(b=>{const id=m.id+b.k,stk=bank*b.stake;
+h+=`<button class="row" data-id="${id}" aria-expanded="${open==id}"><span class="sel">${b.sel}</span><span class="ev">+${pct(b.ev)} EV</span>
+<span class="meta">Model ${pct(b.p)} · Market ${b.odds.toFixed(2)} · ${"★".repeat(b.stars)}${"☆".repeat(5-b.stars)}</span><span class="meta2">Stake ${pct(b.stake,2)} (${stk.toFixed(2)}) · <span class="risk-${b.risk}">${b.risk} risk</span></span></button>`;
+if(open==id){const json={match:m.h+" v "+m.a,market:b.k,probabilities:{model:+b.p.toFixed(4)},fair_odds:+b.fair.toFixed(2),recommended_bet:b.sel,market_odds:b.odds,ev:+b.ev.toFixed(4),stake_percentage:+(b.stake*100).toFixed(2),confidence_stars:b.stars};
+h+=`<div class="detail"><p>${expl(m,b)}</p><p><b>Most likely scores</b> (${N.toLocaleString()} simulations)</p><div class="scores">${r.s.top.map(t=>`<span>${t.score} · ${pct(t.prob)}</span>`).join("")}</div><pre>${JSON.stringify(json,null,2)}</pre></div>`}});
+if(rej&&m.q>=.6)h+=`<div class="rej">Rejected (edge under 3%): ${rejected.map(b=>b.sel+" "+(b.ev>=0?"+":"")+pct(b.ev)).join(", ")||"none"}</div>`;
+h+=`</section>`});
+$("#list").innerHTML=h}
+$("#list").addEventListener("click",e=>{const r=e.target.closest(".row");if(!r)return;open=open==r.dataset.id?null:r.dataset.id;render()});
+$("#bank").addEventListener("input",render);
+const DEMO_D={
+m1:{ko:"Sun 1 Nov 2026, 17:30",v:"Northgate Park · 52,300 seats",r:"A. Whitlock",pre:"Northgate host Riverside after three straight home league wins, and the model rates their attack well above Riverside’s defence. Riverside are missing a starting centre-back, which lifts the home win probability by a clear margin.",inj:["T. Okafor (hamstring, doubtful)","M. Lindqvist (centre-back, out)"],pl:[["D. Falk","h",.38],["J. Mensah","h",.17],["R. Duarte","a",.34]],bk:[["L. Brandt",.31],["S. Haas",.28]],cr:10.2},
+m2:{ko:"Sat 7 Nov 2026, 20:00",v:"Estadio Costa Verde · 41,800 seats",r:"P. Navarro",pre:"Two compact sides meet in a league that averages few goals. Neither team has scored more than twice in any of its last five matches, so the model leans towards a low-scoring draw or a one-goal result.",inj:["None reported","C. Ibarra (midfielder, doubtful)"],pl:[["A. Reyes","h",.3],["M. Soto","a",.28]],bk:[["E. Vidal",.35],["N. Cruz",.3]],cr:9.4},
+m3:{ko:"Sun 8 Nov 2026, 15:30",v:"Ostwald Arena · 38,500 seats",r:"K. Brandl",pre:"Both teams press high and leave space behind their full-backs, and both have scored in four of their last five matches. The model expects goals at each end.",inj:["F. Kessler (winger, out)","None reported"],pl:[["L. Vogt","h",.33],["T. Hahn","a",.31]],bk:[["P. Roth",.3],["B. Ernst",.27]],cr:10.8},
+m4:{ko:"Sun 8 Nov 2026, 18:00",v:"Stadio Porto Alto · 29,000 seats",r:"G. Ferrante",pre:"Porto Alto are favourites at home, but the lineup and injury feeds for this match are incomplete, so the model will not issue final recommendations until they are filled in.",inj:["Data not available","Data not available"],pl:[["N. Marini","h",.36],["D. Costa","a",.25]],bk:[["V. Greco",.29],["I. Neri",.26]],cr:9.9}};
+let MATCHES=DEMO_M,DET=DEMO_D;
+function detail(id){const m=MATCHES.find(x=>x.id==id),d=DET[id];if(!m||!d)return false;
+const K=10,ph=pmf(m.hx),pa=pmf(m.ax),T=[0,0,0,0];let H=0,D=0,A=0,bt=0,w2=0,l2=0,best={p:0};
+for(let i=0;i<=K;i++)for(let j=0;j<=K;j++){const w=ph[i]*pa[j];
+if(i>j)H+=w;else if(i==j)D+=w;else A+=w;
+if(i>0&&j>0)bt+=w;if(i-j>=2)w2+=w;if(j-i>=2)l2+=w;if(w>best.p)best={p:w,s:i+"-"+j};
+[1.5,2.5,3.5,4.5].forEach((L,n)=>{if(i+j>L)T[n]+=w})}
+const q1=pmf(m.hx*.45),r1=pmf(m.ax*.45),q2=pmf(m.hx*.55),r2=pmf(m.ax*.55),hf={};
+for(let a=0;a<=7;a++)for(let b=0;b<=7;b++)for(let c=0;c<=7;c++)for(let e=0;e<=7;e++){const k=Math.sign(a-b)+"|"+Math.sign(a+c-b-e);hf[k]=(hf[k]||0)+q1[a]*r1[b]*q2[c]*r2[e]}
+const hk=Object.entries(hf).sort((x,y)=>y[1]-x[1])[0],nm=s=>s>0?m.h:s<0?m.a:"Draw",[h1,f1]=hk[0].split("|").map(Number);
+const dc=[[m.h+" or draw",H+D],["Draw or "+m.a,D+A],[m.h+" or "+m.a,H+A]].sort((x,y)=>y[1]-x[1])[0];
+const homeFav=H>=A;
+const cp=[Math.exp(-d.cr)];for(let k=1;k<=25;k++)cp.push(cp[k-1]*d.cr/k);
+let cs=0,cb=0;for(let s=0;s<=22;s++){const t=cp[s]+cp[s+1]+cp[s+2];if(t>cb){cb=t;cs=s}}
+const tot=m.hx+m.ax,rows=[];
+const add=(g,s,p,mk)=>rows.push({g,s,p,mk});
+add("Home win",m.h+" to win",H,"H");add("Draw","Draw",D,"D");add("Away win",m.a+" to win",A,"A");
+add("Correct score",m.h+" "+best.s.replace("-"," - ")+" "+m.a,best.p);
+add("Double chance",dc[0],dc[1]);
+add("Half time / full time",nm(h1)+" / "+nm(f1),hk[1]);
+add("Asian handicap",homeFav?m.a+" +1.5":m.h+" +1.5",1-(homeFav?w2:l2));
+add("European handicap",homeFav?m.h+" -1":m.a+" -1",homeFav?w2:l2);
+add("Both teams to score",bt>=.5?"Yes":"No",bt>=.5?bt:1-bt,bt>=.5?"BY":"BN");
+[1.5,2.5,3.5,4.5].forEach((L,n)=>{const o=T[n]>=.5;add("Over / under "+L+" goals",(o?"Over ":"Under ")+L+" goals",o?T[n]:1-T[n],L==2.5?(o?"O25":"U25"):undefined)});
+add("Clean sheet",pa[0]>=ph[0]?m.h+": keeps a clean sheet":m.a+": keeps a clean sheet",Math.max(pa[0],ph[0]));
+d.pl.forEach(([n,sd,s])=>{const lam=sd=="h"?m.hx:m.ax;add("Anytime goalscorer",n,1-Math.exp(-lam*s))});
+if(d.pl.length){const tp=[...d.pl].sort((x,y)=>(y[2]*(y[1]=="h"?m.hx:m.ax))-(x[2]*(x[1]=="h"?m.hx:m.ax)))[0];
+add("First goalscorer",tp[0],(tp[2]*(tp[1]=="h"?m.hx:m.ax)/tot)*(1-Math.exp(-tot)))}
+d.bk.forEach(([n,p])=>add("To be booked",n,p));
+if(d.cr)add("Total corners",cs+" - "+(cs+2),cb);
+const row=r=>{const o=r.mk?m.o[r.mk]:0,ev=o?r.p*o-1:0;
+const mk=o?`<small class="mk">Market ${o.toFixed(2)} · ${ev>=MIN_EDGE&&m.q>=.6?"edge +"+pct(ev)+", stake "+pct(Math.min(ev/(o-1)/4,CAP),2):"no edge"}</small>`:"";
+return `<div class="tr"><div><small>${r.g}</small><b>${r.s}</b>${mk}</div><div class="od">${(1/r.p).toFixed(2)}</div><div class="bar"><i style="width:${(r.p*100).toFixed(0)}%"></i><b>${Math.round(r.p*100)}%</b></div></div>`};
+$("#detail").innerHTML=hero(m,d)+`<div data-t="p" class="card"><h2>What is our ${m.h} vs ${m.a} prediction?</h2><div class="big">${m.h} ${best.s.replace("-"," - ")} ${m.a}</div><p>Most likely single score, with a ${pct(best.p,0)} chance. Win probabilities: ${m.h} ${pct(H,0)}, draw ${pct(D,0)}, ${m.a} ${pct(A,0)}.</p>${m.q<.6?`<div class="demo">Match inputs are ${Math.round(m.q*100)}% complete, so no bets are recommended.</div>`:""}</div>
+<div data-t="p" class="card"><h2>${m.h} vs ${m.a} preview</h2><p>${d.pre}</p><p><b>Absences.</b> ${m.h}: ${d.inj[0]}. ${m.a}: ${d.inj[1]}.</p><p>Expected goals: ${m.hx.toFixed(2)} for ${m.h}, ${m.ax.toFixed(2)} for ${m.a}.</p></div>
+<div data-t="p" class="info"><div><small>Competition</small>${m.lg}</div><div><small>Kick-off</small>${d.ko}</div><div><small>Venue</small>${d.v}</div><div><small>Referee</small>${d.r}</div></div>
+<div data-t="t" class="card tips"><h2>${m.h} vs ${m.a} betting tips</h2><div class="tg"><span>Betting tip</span><span class="od">Fair odds</span><span class="od">Probability</span></div>${rows.map(row).join("")}</div>
+<div data-t="t" class="card"><p class="meta">Fair odds are 1 ÷ model probability. Where a bookmaker price is available it is shown under the tip, with the edge and stake only when the edge is at least 3%. Goalscorer, booking and corner tips appear only when that data is available.</p></div>`+extra(m,d,{H,D,A,bt,o25:T[1],cs:[pa[0],ph[0]]});
+setTab(TAB);return true}
+const FM={m1:["4-2-3-1","4-4-2"],m2:["4-4-2","5-3-2"],m3:["4-3-3","4-2-3-1"],m4:["3-5-2","4-3-3"]};
+function hero(m,d){return `<a class="back" href="#">Back to all matches</a><div class="crumb">Home › ${m.lg} predictions › ${m.h} vs ${m.a}</div><div class="hero"><div class="ht">${m.h}</div><div class="vs">VS</div><div class="ht">${m.a}</div><div class="hs">Prediction and betting tips</div><div class="hs">${d.ko}</div></div><div class="by">ʝµรƭเcεσɠ predictions model</div><div class="tabs">${[["p","Prediction"],["t","Betting tips"],["f","Free bets"],["l","Line-ups"],["i","Injuries"],["s","Stats"]].map(([k,l])=>`<button class="tab" data-tab="${k}">${l}</button>`).join("")}</div>`}
+function cmp(l,a,b,f){return `<div class="cmp"><small>${l}</small><span>${f(a)}</span><div class="cb"><i style="width:${(a/(a+b)*100).toFixed(0)}%"></i></div><span>${f(b)}</span></div>`}
+function extra(m,d,s){const p0=x=>pct(x,0),n2=x=>x.toFixed(2);
+return `<div data-t="f" class="card"><h2>Free bets</h2><p>Bookmaker offers will appear here once partner links are connected. None are set up yet.</p><p class="meta">Offers carry terms and an 18+ age limit. Only stake money you can afford to lose.</p></div>
+<div data-t="l" class="card"><h2>Line-ups</h2>${[["h",m.h],["a",m.a]].map(([sd,n],i)=>d.lu&&d.lu[i]?`<p><b>${n}</b> · ${d.fm[i]||""}<br><span class="meta">${d.lu[i].join(", ")}</span></p>`:`<p><b>${n}</b><br><span class="meta">Not announced yet</span></p>`).join("")}<p class="meta">Starting XIs are usually released about an hour before kick-off.</p></div>
+<div data-t="i" class="card"><h2>Injuries and suspensions</h2><p><b>${m.h}</b><br>${d.inj[0]}</p><p><b>${m.a}</b><br>${d.inj[1]}</p><p class="meta">Absences are shown for information. They don’t change the model’s expected goals yet.</p></div>
+<div data-t="s" class="card"><h2>Stats comparison</h2><p class="meta">${m.h} on the left, ${m.a} on the right.</p>${cmp("Expected goals",m.hx,m.ax,n2)}${cmp("Chance to win",s.H,s.A,p0)}${cmp("Chance of a clean sheet",s.cs[0],s.cs[1],p0)}<p>Draw ${p0(s.D)} · Both teams score ${p0(s.bt)} · Over 2.5 goals ${p0(s.o25)} ${d.cr?" · Expected corners "+d.cr.toFixed(1):""}</p></div>`}
+let TAB="p",LASTID="";
+function setTab(t){const D=$("#detail");D.querySelectorAll("[data-t]").forEach(e=>e.hidden=e.dataset.t!=t);D.querySelectorAll(".tab").forEach(b=>b.setAttribute("aria-pressed",b.dataset.tab==t))}
+$("#detail").addEventListener("click",e=>{const t=e.target.closest(".tab");if(t){TAB=t.dataset.tab;setTab(TAB)}});
+const dr=$("#drawer");
+$("#menu").addEventListener("click",()=>dr.hidden=false);
+$("#dx").addEventListener("click",()=>dr.hidden=true);
+dr.addEventListener("click",e=>{if(e.target==dr)dr.hidden=true});
+const fillDl=()=>$("#dl").innerHTML=[...new Set(MATCHES.map(m=>m.lg))].map(l=>`<button class="di" data-a="lg" data-lg="${l}">${l}</button>`).join("");
+dr.addEventListener("click",e=>{const b=e.target.closest("[data-a]");if(!b)return;const a=b.dataset.a;if(a=="results"){dr.hidden=true;location.hash="results";return}
+if(a=="today"||a=="value"){LEAGUE="";hi=false}
+if(a=="hi"){LEAGUE="";hi=true}
+if(a=="lg"){LEAGUE=b.dataset.lg;hi=false}
+if(a=="rej")rej=!rej;dr.hidden=true;
+if(location.hash)location.hash="";else route();
+render()});
+$("#list").addEventListener("click",e=>{if(e.target.closest("[data-all]")){e.preventDefault();LEAGUE="";hi=false;render()}});
+
+const ML={H:"Home win",D:"Draw",A:"Away win",O25:"Over 2.5",U25:"Under 2.5",BY:"Both teams score",BN:"Not both score"};
+const nz=(x,f)=>x==null?"–":f(x),sgn=x=>(x>=0?"+":"")+x.toFixed(2);
+const cl=x=>x>=0?"pos":"neg";
+async function loadResults(){const el=$("#results"),back='<a class="back" href="#">Back to all matches</a>';
+el.innerHTML=back+'<div class="card"><p class="meta">Loading…</p></div>';let r;
+try{const x=await fetch("/api/results");if(!x.ok)throw 0;r=await x.json()}catch(e){el.innerHTML=back+'<div class="card"><h2>Results tracker</h2><p>Results need the backend. It isn’t connected here, so there is nothing to show yet.</p></div>';return}
+const tb=(h,rows)=>`<table class="tbl"><tr>${h.map(x=>`<th>${x}</th>`).join("")}</tr>${rows.map(c=>`<tr>${c.map(x=>`<td>${x}</td>`).join("")}</tr>`).join("")}</table>`;
+let h=back+`<div class="card"><h2>Results tracker</h2><p>Every pick is saved before kick-off at the odds shown, then settled after full time. Profit assumes a flat stake of 1 unit per bet.</p>`;
+if(!r.matches){h+=`<p>No settled matches yet. ${r.pending} saved matches are waiting for full time.</p></div>`}
+else{const a=r.all;
+h+=`<div class="kp"><div><b>${r.matches}</b><small>Matches settled</small></div><div><b>${a.n}</b><small>Bets</small></div><div><b>${nz(a.hit,x=>pct(x,0))}</b><small>Hit rate</small></div><div><b class="${cl(a.profit)}">${sgn(a.profit)}</b><small>Profit (units)</small></div><div><b class="${a.roi>=0?"pos":"neg"}">${nz(a.roi,x=>pct(x,1))}</b><small>ROI</small></div><div><b>${nz(r.brier,x=>x.toFixed(3))}</b><small>Brier score (lower is better)</small></div></div>`;
+if(a.n<100)h+=`<p class="meta">Small sample: with fewer than 100 bets, hit rate and profit are mostly luck. Don’t trust them yet.</p>`;
+h+=`</div><div class="card"><h2>By market</h2>${tb(["Market","Bets","Hit","ROI"],r.byMarket.map(m=>[ML[m.k]||m.k,m.n,nz(m.hit,x=>pct(x,0)),nz(m.roi,x=>pct(x,0))]))}<h2>By league</h2>${tb(["League","Bets","Hit","ROI"],r.byLeague.map(m=>[m.k,m.n,nz(m.hit,x=>pct(x,0)),nz(m.roi,x=>pct(x,0))]))}</div>
+<div class="card"><h2>Is the model honest?</h2><p class="meta">When the model says 60%, about 60% of those predictions should happen.</p>${tb(["Range","Predictions","Model said","Happened"],r.calibration.map(b=>[b.from+"–"+b.to+"%",b.n,pct(b.pred,0),pct(b.actual,0)]))}<p class="meta">A Brier score of 0.667 is what guessing one third each would give.</p></div>
+<div class="card"><h2>What the model has learned</h2><p class="meta">Scoring-rate adjustments learned from settled matches. 1.00 means no change.</p>${tb(["League","Matches","Home","Away"],r.model.map(m=>[m.lg,m.n,m.sh.toFixed(2),m.sa.toFixed(2)]))}</div>
+<div class="card"><h2>Recent bets</h2>${tb(["Match","Bet","Odds","Profit"],r.recent.map(b=>[b.m+" ("+b.score+")",ML[b.k],b.o.toFixed(2),`<span class="${cl(b.profit)}">${sgn(b.profit)}</span>`]))}</div>`}
+el.innerHTML=h}
+function route(){const id=location.hash.slice(1);if(id!==LASTID){TAB="p";LASTID=id}const res=id==="results",ok=res||(id&&detail(id));
+["#list",".ctrl",".demo"].forEach(s=>$(s).hidden=!!ok);$("#detail").hidden=res||!ok;$("#results").hidden=!res;if(res)loadResults();if(ok)window.scrollTo(0,0)}
+window.addEventListener("hashchange",route);
+function pmf(l){const a=[Math.exp(-l)];for(let k=1;k<=14;k++)a.push(a[k-1]*l/k);return a}
+async function load(){let note;
+try{const r=await fetch("/api/matches");if(!r.ok)throw new Error("HTTP "+r.status);const j=await r.json();MATCHES=j.matches;DET=j.details;
+note="Real data from API-Football, cached on the server. "+(j.updated?"Updated "+new Date(j.updated).toLocaleString()+".":"First fetch still running; reload in a few minutes.")+(j.warnings&&j.warnings.length?" Notes: "+j.warnings.join("; "):"")}
+catch(e){MATCHES=DEMO_M;DET=DEMO_D;note="Demo data. The live backend isn’t connected, so these teams, expected goals and odds are made up."}
+$("#src").textContent=note;fillDl();render();
+if(!MATCHES.length)$("#list").innerHTML='<p class="meta">No fixtures found for the next 7 days.</p>';
+route()}
+load();
+</script>
+</body>
+</html>
